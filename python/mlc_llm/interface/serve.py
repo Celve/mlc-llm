@@ -19,6 +19,7 @@ def serve(
     max_batch_size: int,
     max_total_sequence_length: Optional[int],
     prefill_chunk_size: Optional[int],
+    max_history_size: Optional[int],
     enable_tracing: bool,
     host: str,
     port: int,
@@ -34,10 +35,15 @@ def serve(
         model_lib_path=model_lib_path,
         device=device,
     )
+    kv_cache_kind = config.KVStateKind.ATTENTION
+    if model.find("rwkv"):
+        kv_cache_kind = config.KVStateKind.RNNSTATE
     kv_cache_config = config.KVCacheConfig(
         max_num_sequence=max_batch_size,
         max_total_sequence_length=max_total_sequence_length,
         prefill_chunk_size=prefill_chunk_size,
+        max_history_size=max_history_size,
+        kind=kv_cache_kind,
     )
     # Create engine and start the background loop
     async_engine = engine.AsyncEngine(model_info, kv_cache_config, enable_tracing=enable_tracing)

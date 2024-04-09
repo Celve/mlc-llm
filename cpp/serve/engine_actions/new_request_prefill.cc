@@ -358,6 +358,11 @@ class NewRequestPrefillActionObj : public EngineActionObj {
                   int num_running_rsentries) {
     ICHECK_LE(num_running_rsentries, kv_cache_config_->max_num_sequence);
 
+    // For RNN State, it can prefill as long as it can be instantiated.
+    if (kv_cache_config_->kind == KVStateKind::kRNNState) {
+      return true;
+    }
+
     // No exceeding of the maximum allowed requests that can
     // run simultaneously.
     int spec_factor = engine_mode_->enable_speculative ? engine_mode_->spec_draft_length : 1;

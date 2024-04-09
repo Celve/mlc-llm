@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import tvm
 
 from mlc_llm.serve import data
-from mlc_llm.serve.config import EngineMode, GenerationConfig, KVCacheConfig
+from mlc_llm.serve.config import EngineMode, GenerationConfig, KVCacheConfig, KVStateKind
 from mlc_llm.serve.engine_base import (
     ModelInfo,
     _estimate_max_total_sequence_length,
@@ -121,9 +121,13 @@ class SyncEngine:
         self.max_input_sequence_length = max_single_sequence_length
 
         if kv_cache_config.max_total_sequence_length is None:
-            kv_cache_config.max_total_sequence_length = _estimate_max_total_sequence_length(
-                models, config_file_paths, kv_cache_config.max_num_sequence
-            )
+            if kv_cache_config.kind == KVStateKind.RNNSTATE:
+                # rnn state would not limited by the total sequence length, so set it to a large value
+                kv_cache_config.max_total_sequence_length = int(2**30)
+            else:
+                kv_cache_config.max_total_sequence_length = _estimate_max_total_sequence_length(
+                    models, config_file_paths, kv_cache_config.max_num_sequence
+                )
         if kv_cache_config.prefill_chunk_size is None:
             kv_cache_config.prefill_chunk_size = prefill_chunk_size
         elif kv_cache_config.prefill_chunk_size > prefill_chunk_size:

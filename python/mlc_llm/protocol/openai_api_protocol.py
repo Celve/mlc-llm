@@ -100,7 +100,7 @@ class CompletionRequest(BaseModel):
     stream: bool = False
     suffix: Optional[str] = None
     temperature: float = 1.0
-    top_p: float = 1.0
+    top_p: float = 1.0  # the default top_p for rwkv models is 0.3
     user: Optional[str] = None
     ignore_eos: bool = False
     response_format: Optional[RequestResponseFormat] = None

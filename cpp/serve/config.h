@@ -70,6 +70,13 @@ class GenerationConfig : public ObjectRef {
 
 /****************** KV Cache config ******************/
 
+/*! \brief The kind of cache. */
+enum KVStateKind {
+  kNone = 0,
+  kAttention = 1,
+  kRNNState = 2,
+};
+
 /*! \brief The configuration of paged KV cache. */
 class KVCacheConfigNode : public Object {
  public:
@@ -77,6 +84,8 @@ class KVCacheConfigNode : public Object {
   int max_num_sequence;
   int max_total_sequence_length;
   int prefill_chunk_size;
+  int max_history_size;
+  KVStateKind kind;
 
   String AsJSONString() const;
 
@@ -89,7 +98,7 @@ class KVCacheConfigNode : public Object {
 class KVCacheConfig : public ObjectRef {
  public:
   explicit KVCacheConfig(int page_size, int max_num_sequence, int max_total_sequence_length,
-                         int prefill_chunk_size);
+                         int prefill_chunk_size, int max_history_size, KVStateKind kind);
 
   explicit KVCacheConfig(const std::string& config_str, int max_single_sequence_length);
 

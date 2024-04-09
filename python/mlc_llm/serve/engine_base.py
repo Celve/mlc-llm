@@ -21,7 +21,7 @@ from mlc_llm.chat_module import _get_chat_config, _get_lib_module_path, _get_mod
 from mlc_llm.protocol import openai_api_protocol, protocol_utils
 from mlc_llm.protocol.conversation_protocol import Conversation
 from mlc_llm.serve import data, engine_utils
-from mlc_llm.serve.config import EngineMode, GenerationConfig, KVCacheConfig
+from mlc_llm.serve.config import EngineMode, GenerationConfig, KVCacheConfig, KVStateKind
 from mlc_llm.serve.event_trace_recorder import EventTraceRecorder
 from mlc_llm.streamer import TextStreamer
 from mlc_llm.support import logging
@@ -555,9 +555,13 @@ class EngineBase:  # pylint: disable=too-many-instance-attributes,too-few-public
         self.state = EngineState(enable_tracing)
 
         if kv_cache_config.max_total_sequence_length is None:
-            kv_cache_config.max_total_sequence_length = _estimate_max_total_sequence_length(
-                models, config_file_paths, kv_cache_config.max_num_sequence
-            )
+            if kv_cache_config.kind == KVStateKind.RNNSTATE:
+                # rnn state would not limited by the total sequence length, so set it to a large value
+                kv_cache_config.max_total_sequence_length = int(2**30)
+            else:
+                kv_cache_config.max_total_sequence_length = _estimate_max_total_sequence_length(
+                    models, config_file_paths, kv_cache_config.max_num_sequence
+                )
         self.max_input_sequence_length = min(
             max_single_sequence_length, kv_cache_config.max_total_sequence_length
         )

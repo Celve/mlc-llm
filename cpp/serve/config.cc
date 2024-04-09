@@ -227,12 +227,14 @@ String GenerationConfigNode::AsJSONString() const {
 TVM_REGISTER_OBJECT_TYPE(KVCacheConfigNode);
 
 KVCacheConfig::KVCacheConfig(int page_size, int max_num_sequence, int max_total_sequence_length,
-                             int prefill_chunk_size) {
+                             int prefill_chunk_size, int max_history_size, KVStateKind kind) {
   ObjectPtr<KVCacheConfigNode> n = make_object<KVCacheConfigNode>();
   n->page_size = page_size;
   n->max_num_sequence = max_num_sequence;
   n->max_total_sequence_length = max_total_sequence_length;
   n->prefill_chunk_size = prefill_chunk_size;
+  n->max_history_size = max_history_size;  // only used for RNN models
+  n->kind = kind;
   data_ = std::move(n);
 }
 
@@ -241,6 +243,8 @@ KVCacheConfig::KVCacheConfig(const std::string& config_str, int max_single_seque
   int max_total_sequence_length;
   int max_num_sequence = -1;
   int prefill_chunk_size;
+  int max_history_size = 1;
+  KVStateKind kind = KVStateKind::kAttention;
 
   picojson::value config_json;
   std::string err = picojson::parse(config_json, config_str);
@@ -276,12 +280,26 @@ KVCacheConfig::KVCacheConfig(const std::string& config_str, int max_single_seque
   } else {
     LOG(FATAL) << "Key \"max_num_sequence\" not found.";
   }
+  if (config.count("max_history_size")) {
+    CHECK(config["max_history_size"].is<int64_t>());
+    max_history_size = static_cast<KVStateKind>(config["max_history_size"].get<int64_t>());
+  } else {
+    LOG(FATAL) << "Key \"max_history_size\" not found.";
+  }
+  if (config.count("kind")) {
+    CHECK(config["kind"].is<int64_t>());
+    kind = static_cast<KVStateKind>(config["kind"].get<int64_t>());
+  } else {
+    LOG(FATAL) << "Key \"kind\" not found.";
+  }
 
   ObjectPtr<KVCacheConfigNode> n = make_object<KVCacheConfigNode>();
   n->page_size = page_size;
   n->max_num_sequence = max_num_sequence;
   n->max_total_sequence_length = max_total_sequence_length;
   n->prefill_chunk_size = prefill_chunk_size;
+  n->max_history_size = max_history_size;
+  n->kind = kind;
   data_ = std::move(n);
 }
 
@@ -292,6 +310,7 @@ String KVCacheConfigNode::AsJSONString() const {
   config["max_total_sequence_length"] =
       picojson::value(static_cast<int64_t>(this->max_total_sequence_length));
   config["prefill_chunk_size"] = picojson::value(static_cast<int64_t>(this->prefill_chunk_size));
+  // TODO!
   return picojson::value(config).serialize(true);
 }
 

@@ -123,6 +123,12 @@ class GenerationConfig:  # pylint: disable=too-many-instance-attributes
         return GenerationConfig(**json.loads(json_str))
 
 
+class KVStateKind:
+    NONE = 0
+    ATTENTION = 1
+    RNNSTATE = 2
+
+
 @dataclass
 class KVCacheConfig:
     """The KV cache initialization configuration.
@@ -145,12 +151,21 @@ class KVCacheConfig:
     prefill_chunk_size : Optional[int]
         The maximum total sequence length in a prefill.
         If not specified, it will be automatically inferred from model config.
+
+    max_history_size : Optional[int]
+        The maximum number of history messages to keep in the cache.
+        If not specified, it will be automatically inferred from model config.
+
+    kind: KVStateKind
+        The kind of the KV state.
     """
 
     page_size: int = 16
     max_num_sequence: int = 32
     max_total_sequence_length: Optional[int] = None
     prefill_chunk_size: Optional[int] = None
+    max_history_size: Optional[int] = None
+    kind: KVStateKind = KVStateKind.ATTENTION
 
     def asjson(self) -> str:
         """Return the config in string of JSON format."""

@@ -38,6 +38,9 @@ def main(argv):
         "--max-total-seq-length", type=int, help=HELP["max_total_sequence_length_serve"]
     )
     parser.add_argument("--prefill-chunk-size", type=int, help=HELP["prefill_chunk_size_serve"])
+    parser.add_argument(
+        "--max-history-size", type=int, default=1, help=HELP["max_history_size_serve"]
+    )
     parser.add_argument("--enable-tracing", action="store_true", help=HELP["enable_tracing_serve"])
     parser.add_argument(
         "--host",
@@ -79,6 +82,7 @@ def main(argv):
         max_batch_size=parsed.max_batch_size,
         max_total_sequence_length=parsed.max_total_seq_length,
         prefill_chunk_size=parsed.prefill_chunk_size,
+        max_history_size=parsed.max_history_size,
         enable_tracing=parsed.enable_tracing,
         host=parsed.host,
         port=parsed.port,
