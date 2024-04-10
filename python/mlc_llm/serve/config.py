@@ -1,5 +1,6 @@
 """Configuration dataclasses used in MLC LLM serving"""
 
+from enum import IntEnum
 import json
 from dataclasses import asdict, dataclass, field
 from typing import Dict, List, Literal, Optional
@@ -123,7 +124,9 @@ class GenerationConfig:  # pylint: disable=too-many-instance-attributes
         return GenerationConfig(**json.loads(json_str))
 
 
-class KVStateKind:
+class KVStateKind(IntEnum):  # pylint: disable=too-few-public-methods
+    """Possible kinds of KV state."""
+
     NONE = 0
     ATTENTION = 1
     RNNSTATE = 2
